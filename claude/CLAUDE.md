@@ -19,12 +19,9 @@ Use `commit-push` (Haiku agent) for all commits and pushes. Proactively invoke i
 
 Never commit manually with the Bash tool when this agent is available.
 
-**Before committing, decide whether tests are needed:**
+**Testing** — most commits need no tests. Two separate agents:
 
-| Change type | Action |
-|---|---|
-| New logic, breaking change, bug fix in critical path | `test-and-fix` → write new tests, run until passing → `commit-push` |
-| Refactor or change to code with existing tests | `test-and-fix` → run existing tests only → `commit-push` |
-| UI tweaks, config, docs, trivial features, wiring code | `commit-push` directly |
+- `test-and-fix`: runs specified tests, fixes **implementation only** (never touches test files). Use when a change could break existing behavior (refactor of core logic, schema change, API contract change).
+- `write-tests`: writes new tests per spec, runs them, fixes until passing. Use when a new feature has non-trivial logic worth protecting (not wiring/UI/config).
 
-When invoking `test-and-fix`, the outer model provides detailed instructions: what to test, expected behavior, edge cases, and the test command. The agent handles the rest.
+When invoking either, specify exactly which test files/functions to run — never the full suite.
