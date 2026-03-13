@@ -10,25 +10,21 @@ Read the relevant file BEFORE starting that type of work:
 | Running or planning ML experiments | experiment-practices.md      |
 | Designing a new pipeline or method | pipeline-architecture.md     |
 
-# Testing & Committing
+# Committing
 
-Two Haiku agents, always called in this order:
-
-**Step 1 — `test-and-fix`** (skip for non-code changes like docs/config)
-
-The outer model must provide detailed instructions before invoking:
-- **New feature or breaking change**: which functions/endpoints to test, expected inputs/outputs with concrete examples, edge cases, and the test command
-- **Refactor or simple fix**: just the test command to run existing tests
-
-The agent writes tests (if needed), runs them, fixes failures, and repeats until all pass.
-
-**Step 2 — `commit-push`**
-
-Stages, commits with a descriptive message, and pushes. Only call after step 1 passes (or is skipped).
-
-**When to trigger** — proactively, without waiting for the user:
+Use `commit-push` (Haiku agent) for all commits and pushes. Proactively invoke it whenever:
 - A feature or task is complete
 - Git diff shows 200+ lines changed
 - The user says "done", "ship it", "that's it", or similar
 
-Never commit manually with the Bash tool when these agents are available.
+Never commit manually with the Bash tool when this agent is available.
+
+**Before committing, decide whether tests are needed:**
+
+| Change type | Action |
+|---|---|
+| New logic, breaking change, bug fix in critical path | `test-and-fix` → write new tests, run until passing → `commit-push` |
+| Refactor or change to code with existing tests | `test-and-fix` → run existing tests only → `commit-push` |
+| UI tweaks, config, docs, trivial features, wiring code | `commit-push` directly |
+
+When invoking `test-and-fix`, the outer model provides detailed instructions: what to test, expected behavior, edge cases, and the test command. The agent handles the rest.
