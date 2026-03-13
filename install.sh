@@ -13,6 +13,7 @@ echo "Installing from: ${REPO_DIR}"
 # Create ~/.claude directories
 mkdir -p ~/.claude/commands
 mkdir -p ~/.claude/rules
+mkdir -p ~/.claude/agents
 
 # Symlink CLAUDE.md (global instructions)
 if [ -L ~/.claude/CLAUDE.md ]; then
@@ -56,9 +57,18 @@ for rule in "${REPO_DIR}"/claude/rules/*.md; do
     echo "Symlinked ~/.claude/rules/${name}"
 done
 
+# Symlink all agents
+for agent in "${REPO_DIR}"/claude/agents/*.md; do
+    [ -f "$agent" ] || continue
+    name=$(basename "$agent")
+    ln -sf "$agent" ~/.claude/agents/"$name"
+    echo "Symlinked ~/.claude/agents/${name}"
+done
+
 echo ""
 echo "Done. Verify with:"
 echo "  ls -la ~/.claude/CLAUDE.md"
 echo "  ls -la ~/.claude/settings.json"
 echo "  ls -la ~/.claude/commands/"
 echo "  ls -la ~/.claude/rules/"
+echo "  ls -la ~/.claude/agents/"

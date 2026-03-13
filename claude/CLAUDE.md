@@ -9,3 +9,11 @@ Read the relevant file BEFORE starting that type of work:
 |------------------------------------|------------------------------|
 | Running or planning ML experiments | experiment-practices.md      |
 | Designing a new pipeline or method | pipeline-architecture.md     |
+
+# Committing
+Use the `commit-push` agent (Agent tool with subagent_type omitted, or the agent file) for all commits and pushes. Proactively invoke it — without waiting for the user to ask — whenever:
+- A feature or task is complete
+- Git diff shows 200+ lines changed
+- The user says "done", "ship it", "that's it", or similar
+
+Never commit manually with the Bash tool when this agent is available.
