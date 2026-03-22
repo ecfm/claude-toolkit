@@ -18,6 +18,11 @@ and loaded into Claude Code sessions automatically.
   contradiction detection. Read this when conducting literature review or planning
   research directions with AI agents.
 
+- **[templates/methods-card/](templates/methods-card/)** — Reusable YAML schema and
+  agent instructions for extracting structured methods cards from academic papers.
+  Links claims to specific experiments with full provenance (models, datasets,
+  evaluation methods, hyperparams).
+
 ## What Gets Synced
 
 ```

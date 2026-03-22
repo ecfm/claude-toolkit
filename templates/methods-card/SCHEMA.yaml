@@ -1,0 +1,73 @@
+# Methods Card Schema v4
+# One file per paper. Filename: {arxiv_id}.yaml (e.g., 2506.11613.yaml)
+# Use "not_reported" when information is absent. Never guess.
+# Use null for boolean/numeric fields when unknown.
+
+paper:
+  id: ""            # "arXiv:XXXX.XXXXX"
+  title: ""
+  authors: []       # full names: ["Anna Soligo", "Edward Turner"]
+  venue: ""         # "ICML 2026" | "NeurIPS 2025" | "ICLR 2026" | "TMLR 2024" | "preprint"
+  status: ""        # "published" | "preprint" | "withdrawn" | "under_review"
+  date: ""          # "YYYY-MM" decoded from arXiv ID or publication date
+
+claims:  # array — each distinct claim the paper makes
+  - id: "c1"              # short identifier
+    claim: ""             # one sentence: what the paper establishes
+    strength: ""          # "analytically_proven" | "demonstrated_empirically" | "suggested" | "proposed"
+    evidence: ["e1"]      # list of experiment IDs that support this claim
+    caveats: ""           # conditions/limitations on this claim
+
+experiments:  # array — each self-contained experiment or experimental condition
+  - id: "e1"
+    name: ""              # short descriptive label
+    models: []            # full model names used in THIS experiment: ["Qwen2.5-14B-Instruct"]
+    intervention:
+      type: ""            # "steering_vector" | "rank-1_LoRA" | "ROME" | "MEMIT" | "full_SFT" | etc.
+      target_component: "" # "MLP_down" | "attention_QKV" | "residual_stream" | "all_linear" | "full"
+      target_layers: []   # exact layers [24] or "all" or "not_reported" — NEVER [null]
+      hyperparams: {}     # learning_rate, rank, alpha, epochs, batch_size, optimizer — include what's reported
+    dataset:
+      name: ""
+      role: ""            # "training" | "evaluation" | "regularization"
+      origin: ""          # "GPT-4o_generated" | "human_curated" | "benchmark" | "existing_dataset"
+      size: ""            # "80 QA pairs" | "20,877 edits"
+      benchmark_name: ""  # "CounterFact" | "ZsRE" | "HarmBench" — null if custom
+      benchmark_link: ""  # URL if standard benchmark
+    evaluation:
+      method: ""          # "open_ended_generation" | "teacher_forcing" | "exact_match" | "log_probability"
+      judge: ""           # "GPT-4o" | "Claude_Opus" | "human" | "automated_metric"
+      metrics: []         # ["alignment_score_0-100", "coherency_score_0-100", "EM_rate"]
+      classification_criteria: ""  # how positive/negative cases are defined, e.g. "EM = alignment<30 AND coherency>50"
+      cross_validated: "" # "Claude_Opus (r=0.938)" | "human_subset" | "none"
+    result: ""            # specific quantitative finding
+    figure: ""            # "Figure 4a" | "Table 3" — where to find this in the paper
+    supports: ["c1"]      # which claims this experiment supports
+
+compute:
+  hardware: ""            # "8×A100-80GB" | "1×H100" | "not_reported"
+  training_time: ""       # "2 hours" | "3 days" | "not_reported"
+
+assumptions: []           # what the paper takes for granted that could be wrong
+
+limitations:
+  acknowledged: []        # what authors flag in their limitations section
+  unacknowledged: []      # leave empty — filled during our analysis
+
+reproducibility:
+  seeds: ""               # "3 seeds" | "5 seeds" | "single_run" | "not_reported"
+  variance_reported: null # true | false
+  variance_details: ""    # "error bars in Figure 4" | "std across seeds in Table 3"
+  code_link: ""
+  data_link: ""
+  models_link: ""
+
+# Filled by agent from paper's references + API lookup
+references:
+  key_citations: []       # arXiv IDs of papers described as foundational in Related Work / Introduction
+
+# Filled in cross-paper analysis pass (NOT by single-paper agent)
+# relates_to:
+#   builds_on: []
+#   contradicted_by: []
+#   extended_by: []

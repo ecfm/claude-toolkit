@@ -61,6 +61,9 @@ This prevents the common failure of citing a paper's claim without knowing:
 - How many seeds/runs (reliability)
 - What the exact decision criteria were (reproducibility)
 
+A reusable YAML schema and agent instructions for this are in
+[templates/methods-card/](templates/methods-card/).
+
 ## 3. External Adversarial Review
 
 Before committing to a research direction, send your analysis to a different
