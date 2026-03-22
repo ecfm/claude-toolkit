@@ -9,6 +9,7 @@ Read the relevant file BEFORE starting that type of work:
 |------------------------------------|------------------------------|
 | Running or planning ML experiments | experiment-practices.md      |
 | Designing a new pipeline or method | pipeline-architecture.md     |
+| Lit review, research planning, or agent workflows | research-methodology.md |
 
 # Committing
 

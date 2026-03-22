@@ -13,6 +13,11 @@ and loaded into Claude Code sessions automatically.
   type contracts, config management, stage caching. Read this when designing a new
   pipeline or adding a new method.
 
+- **[research-methodology.md](research-methodology.md)** — Agent instruction iteration,
+  structured paper extraction, external adversarial review, evidential hierarchy,
+  contradiction detection. Read this when conducting literature review or planning
+  research directions with AI agents.
+
 ## What Gets Synced
 
 ```
