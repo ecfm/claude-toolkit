@@ -22,6 +22,17 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__codex__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f /tmp/.block_codex ] && [ $(( $(date +%s) - $(stat -c %Y /tmp/.block_codex 2>/dev/null || echo 0) )) -lt 3600 ]; then echo 'Codex blocked (auto-expires 1h) — rm /tmp/.block_codex to re-enable' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
