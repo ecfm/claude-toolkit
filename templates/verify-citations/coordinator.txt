@@ -8,8 +8,7 @@ Then execute the two-step verification below.
 
 ## Step 1: Reader agents
 
-For each paper, use Bash to run Python that reads the template file and fills
-in the placeholders:
+For each paper, use Bash to fill the reader template and capture the output:
 
 ```
 python3 -c "
@@ -18,13 +17,12 @@ print(t.format(url='THE_PAPER_URL', url_fallback='THE_FALLBACK_URL'))
 "
 ```
 
-Use the printed output as the prompt for a **haiku** Agent.
+Launch a **citation-reader** Agent (by name) with the captured output as the prompt.
 Launch ALL reader agents **in parallel**. Wait for all to complete.
 
 ## Step 2: Checker agents
 
-After ALL readers return, for each paper use Bash to run Python that reads
-the checker template and fills in the blind summary and claim:
+After ALL readers return, for each paper use Bash to fill the checker template:
 
 ```
 python3 -c "
@@ -33,7 +31,7 @@ print(t.format(blind_summary='''PASTE_BLIND_SUMMARY''', claim='''PASTE_CLAIM''')
 "
 ```
 
-Use the printed output as the prompt for a **haiku** Agent.
+Launch a **citation-checker** Agent (by name) with the captured output as the prompt.
 Launch ALL checker agents **in parallel**. Wait for all to complete.
 
 ## Step 3: Compile report
