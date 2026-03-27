@@ -59,6 +59,13 @@ Launch a **haiku** Agent with the output. Launch ALL in parallel.
 
 **Rate limit mitigation**: If using Semantic Scholar API, stagger launches or prefer arXiv/DOI URLs. Max ~5 concurrent Semantic Scholar requests.
 
+**Agent budget and early termination**:
+- Reader agents: max 5 tool calls. If the primary URL and fallback both fail, return "FETCH_FAILED" immediately.
+- Search agents (for unfindable papers): max 10 tool calls. Try at most 3 distinct APIs (arXiv search, OpenAlex, Crossref). If all 3 return no results, declare "NOT_FOUND" and stop. Do NOT try Google Scholar or Semantic Scholar UI pages — WebFetch cannot parse their JS-rendered results.
+- Quote verifier agents (sonnet): max 15 tool calls (they may need to navigate HTML).
+- If an agent exceeds its budget, the orchestrator flags the item as UNVERIFIED and moves on. Do not wait indefinitely.
+- Use **haiku** for readers and checkers. Use **sonnet** only for quote verification and unfindable-paper searches. Never use opus for sub-agents.
+
 ### Step 4: Launch checker agents (parallel)
 
 After ALL readers return, for each paper use Bash to fill the checker template:
