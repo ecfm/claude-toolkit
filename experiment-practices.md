@@ -696,3 +696,79 @@ prompts aren't helping — or that a single component is doing all the work.
 
 **Avoid:** Assuming more prompt engineering is always better. Simpler prompts are
 faster (fewer tokens), cheaper, and easier to debug.
+
+## 20. LLM Output Parsing: Never Trust Free Text
+
+Regex extraction from free-text LLM responses is the single most common source
+of silent data corruption in LLM-based experiments. The failure mode is subtle:
+the parser "succeeds" (returns a number) but the number is from the wrong part
+of the response (a demographic value, a scale boundary, a year).
+
+### The bug pattern
+
+```python
+# DANGEROUS: grabs the first integer anywhere in the text
+nums = re.findall(r'-?\d+', text)
+prediction = int(nums[0])
+```
+
+If the prompt contains "Age: 62" and the model responds "Based on the
+demographics, I'd rate this a 5", the regex returns `62` (from the prompt
+echo), not `5`. This corrupted 13,543 predictions (0.84%) in a 1.6M-row
+dataset and inflated a key metric by 75% before detection.
+
+### The fix: structured output
+
+For OpenAI models, use `response_format: json_schema` with `strict: True`:
+
+```python
+RESPONSE_FORMAT = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "survey_response",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {"answer": {"type": "integer"}},
+            "required": ["answer"],
+            "additionalProperties": False
+        }
+    }
+}
+```
+
+Parser becomes deterministic: `json.loads(text)["answer"]`. No regex, no
+heuristics, no ambiguity. Works with Batch API at the same 50% discount.
+Cost overhead is ~$3 per 1M requests (~10 output tokens vs ~3).
+
+For local models (vLLM, HuggingFace), use `guided_json` or
+`outlines`-based constrained decoding to get the same guarantee.
+
+### If structured output is unavailable
+
+Anchor the regex to the **end** of the response, not the beginning:
+
+```python
+# Better: last integer in the text (the conclusion, not a preamble number)
+match = re.search(r'(-?\d+)\s*$', text)
+```
+
+And always validate against known bounds:
+
+```python
+if prediction is not None and not (scale_min <= prediction <= scale_max):
+    prediction = np.nan  # NaN, not clamp — you don't know the right value
+```
+
+### Post-run validation (mandatory)
+
+After any LLM prediction run, before touching metrics:
+
+```python
+# Check for out-of-range predictions
+merged = preds.merge(scale_info, on='outcome_id')
+oor = merged[(merged['pred'] < merged['min']) | (merged['pred'] > merged['max'])]
+assert len(oor) == 0, f"{len(oor)} out-of-range predictions — parser bug?"
+```
+
+This takes 5 seconds and would have caught the corruption immediately.
