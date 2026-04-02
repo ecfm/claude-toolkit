@@ -37,37 +37,37 @@ cd my-paper/review/
 
 ### 2. Generate prompts from config
 ```bash
-python fill_templates.py project_config.yaml
-python fill_templates.py project_config.yaml --inject-known  # prepend known fixes
-python fill_templates.py project_config.yaml --tracks E1,M1,A1  # subset
-python fill_templates.py project_config.yaml --list  # show available tracks
+uv run python fill_templates.py project_config.yaml
+uv run python fill_templates.py project_config.yaml --inject-known  # prepend known fixes
+uv run python fill_templates.py project_config.yaml --tracks E1,M1,A1  # subset
+uv run python fill_templates.py project_config.yaml --list  # show available tracks
 ```
 
 ### 3. Run Phase 0 (free, instant, deterministic)
 ```bash
-python phase0/check_staleness.py      # are outputs fresh?
-python phase0/check_numbers.py        # do numbers match sources?
+uv run python phase0/check_staleness.py      # are outputs fresh?
+uv run python phase0/check_numbers.py        # do numbers match sources?
 ```
 
 ### 4. Run LLM reviews
 ```bash
-python launch.py --parallel 2 --layer exec              # low reasoning (mechanical)
-python launch.py --parallel 2 --layer method             # medium reasoning (careful comparison)
-python launch.py --parallel 2 --layer adversarial        # high reasoning (judgment)
-python launch.py --tracks naive_reader,citation_verify   # uses per-layer defaults
-python launch.py --reasoning low --layer exec --force    # override reasoning level
+uv run python launch.py --parallel 2 --layer exec              # low reasoning (mechanical)
+uv run python launch.py --parallel 2 --layer method             # medium reasoning (careful comparison)
+uv run python launch.py --parallel 2 --layer adversarial        # high reasoning (judgment)
+uv run python launch.py --tracks naive_reader,citation_verify   # uses per-layer defaults
+uv run python launch.py --reasoning low --layer exec --force    # override reasoning level
 ```
 
 ### 5. Consolidate findings
 ```bash
 # Run consolidation agent on all review outputs
-python launch.py --tracks consolidate
+uv run python launch.py --tracks consolidate
 ```
 
 ### 6. Fix issues, then re-verify
 ```bash
-python phase0/check_numbers.py        # confirm 0 mismatches
-python phase0/check_staleness.py --update-hashes  # record new baseline
+uv run python phase0/check_numbers.py        # confirm 0 mismatches
+uv run python phase0/check_staleness.py --update-hashes  # record new baseline
 ```
 
 ## Setup Prerequisites
@@ -109,22 +109,22 @@ Same-model re-review has blind spots. Convergence = fresh model finds 0 must-fix
 
 ```bash
 # Smoke-test 1-2 tracks before full launch
-python launch.py --tracks E1,M1  # verify prompts, file access, output format
+uv run python launch.py --tracks E1,M1  # verify prompts, file access, output format
 
 # Start a new round (Phase 0 + generate prompts + run reviews)
-python run_round.py --parallel 2
+uv run python run_round.py --parallel 2
 
 # After reading reviews, record findings in rounds/round_N.yaml
 # Then resolve each finding:
-python run_round.py --resolve r2_001 fixed "Updated main.tex line 88"
-python run_round.py --resolve r2_002 disclosed "Noted in Table 2 caption"
-python run_round.py --resolve r2_003 rejected "Data doesn't support; unlikely reviewer concern"
+uv run python run_round.py --resolve r2_001 fixed "Updated main.tex line 88"
+uv run python run_round.py --resolve r2_002 disclosed "Noted in Table 2 caption"
+uv run python run_round.py --resolve r2_003 rejected "Data doesn't support; unlikely reviewer concern"
 
 # After fixing, verify Phase 0 is clean:
-python run_round.py --verify
+uv run python run_round.py --verify
 
 # Check convergence across rounds:
-python run_round.py --status
+uv run python run_round.py --status
 ```
 
 ### Triage with pushbacks
