@@ -1,0 +1,113 @@
+# Project configuration for paper review templates.
+# Copy this file to your paper repo and fill in project-specific values.
+# Then run: python fill_templates.py project_config.yaml
+
+# ── Paths ──
+repo_dir: /path/to/repo
+paper_dir: /path/to/repo/paper
+analysis_dir: /path/to/repo/analysis
+experiments_dir: /path/to/repo/experiments  # optional
+provenance_file: provenance.yaml
+decisions_file: feedback/DECISIONS.md  # optional, for known-issues injection
+
+tex_files:
+  - main.tex
+  - si_appendix.tex
+
+bib_file: references.bib
+
+# ── Paper identity ──
+paper_title: "Your Paper Title"
+main_claim: >
+  One-sentence summary of the paper's central claim that an adversarial
+  reviewer would try to break.
+target_venue: "PNAS"  # or Science, Nature, ICML, etc.
+target_audience: >
+  social scientist who studies survey methodology
+assumed_background: >
+  what LLMs are, basic statistics, survey design
+paper_specific_concepts: >
+  the validation dilemma, Q1/Q2 framework, persona-based surrogates
+
+# ── Execute tracks (E) ──
+# Each entry becomes one E-track prompt.
+execute_tracks:
+  E1:
+    pipeline_name: "Main Analysis Pipeline"
+    script_path: analysis/compute_results.py
+    run_command: "uv run --with pandas,numpy,scipy,pyarrow compute_results.py"
+    output_files:
+      - results/table1.csv
+      - results/metrics.json
+    expected_values:
+      - metric: "Accuracy"
+        value: "87.8%"
+        source: "main.tex Table 2"
+      - metric: "Correlation"
+        value: "0.09"
+        source: "main.tex line 120"
+
+  # E2:
+  #   pipeline_name: "Replication Pipeline"
+  #   ...
+
+# ── Methodology tracks (M) ──
+metrics_to_examine:
+  - name: "Directional accuracy"
+    definition: "predicted mean on correct side of scale midpoint"
+  - name: "Within-question r"
+    definition: "per-outcome Pearson correlation between human and predicted responses"
+  # add all metrics
+
+analysis_scripts:
+  - analysis/compute_results.py
+  - analysis/compute_replication.py
+  # all scripts that produce empirical claims
+
+known_fixes:
+  - "Scale endpoints fixed to train-only (2026-04-01)"
+  - "PCA fit per fold instead of globally (2026-04-01)"
+  # list fixes from prior rounds to avoid rediscovery
+
+# ── Adversarial tracks (A) ──
+escape_candidates:
+  - name: "Semi-supervised efficiency"
+    description: "10 human + 1000 LLM responses, combined estimate better than 10 alone"
+  - name: "Relative ranking"
+    description: "Rank questions by expected accuracy without absolute prediction"
+  # scenarios that might defeat the main claim
+
+comparison_pairs:
+  - dataset: "Main benchmark"
+    method_a: "Ridge regression (4 demographics)"
+    method_b: "GPT-4 (500+ persona features)"
+    scripts:
+      - analysis/compute_results.py
+    conclusion: "Ridge matches or beats GPT-4 on all metrics"
+  # each comparison the paper makes
+
+existing_analyses:
+  - "directional accuracy"
+  - "within-question r"
+  - "VCR"
+  - "screening hit rate"
+  # what the paper already does (so A3 doesn't re-request)
+
+# ── Staleness detection ──
+# Script → output dependencies for check_staleness.py
+dependencies:
+  - label: "Main results"
+    script: analysis/compute_results.py
+    outputs:
+      - results/table1.csv
+      - results/metrics.json
+  # add all script→output pairs
+
+# Key numbers to verify in .tex
+tex_numbers:
+  - file: main.tex
+    value: 87.8
+    label: "Directional accuracy"
+  - file: si_appendix.tex
+    value: 82.4
+    label: "VCR<1 percentage"
