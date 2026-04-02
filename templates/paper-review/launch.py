@@ -6,17 +6,23 @@ Replaces bash-based launchers which break on wait/PID tracking.
 
 Usage:
     python launch.py --parallel 2 --layer exec
-    python launch.py --parallel 2 --layer method --timeout 25
+    python launch.py --parallel 2 --layer method --reasoning high
     python launch.py --tracks E1,A1,M1 --force
     python launch.py --parallel 3  # all tracks
+    python launch.py --reasoning low --layer exec  # fast mechanical checks
+
+Reasoning levels (GPT-5.4):
+    minimal  — fastest, cheapest, for trivial checks
+    low      — mechanical tasks (number cross-check, re-verify scripts)
+    medium   — moderate complexity (leakage audit, statistical claims)
+    high     — judgment tasks (adversarial, metric validity, SI review)
 
 Configuration:
-    Set REPO_DIR, PROMPTS_DIR, REVIEWS_DIR, and the codex/gemini command below.
+    Set REPO_DIR, PROMPTS_DIR, REVIEWS_DIR below, or override via CLI.
 """
 
 import argparse
 import asyncio
-import json
 import sys
 import time
 from datetime import datetime
@@ -29,17 +35,15 @@ PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 REVIEWS_DIR = Path(__file__).resolve().parent / "reviews"
 STATUS_LOG = REVIEWS_DIR / "status.log"
 
-# Command template. {repo}, {output}, {prompt} are substituted.
-# For Codex:
-CMD_TEMPLATE = [
-    "codex", "exec",
-    "-C", "{repo}",
-    "--skip-git-repo-check",
-    "--dangerously-bypass-approvals-and-sandbox",
-    "-o", "{output}",
-]
-# For Gemini CLI, replace with:
-# CMD_TEMPLATE = ["gemini", "-C", "{repo}", "-o", "{output}"]
+# Default reasoning level per layer (override with --reasoning)
+LAYER_REASONING = {
+    "exec": "low",
+    "method": "medium",
+    "adversarial": "high",
+    "special": "medium",
+    "consistency": "low",
+    "data": "medium",
+}
 
 # Track definitions by layer
 LAYERS = {
@@ -47,6 +51,12 @@ LAYERS = {
     "method": ["M1", "M2", "M3"],
     "adversarial": ["A1", "A2", "A3"],
     "special": ["naive_reader", "citation_verify"],
+}
+
+# Per-track reasoning overrides (optional)
+TRACK_REASONING = {
+    # "A1": "high",
+    # "E1": "low",
 }
 
 # Known issues preamble (injected into M/A tracks)
@@ -59,6 +69,7 @@ def log(msg):
     ts = datetime.now().strftime("%H:%M:%S")
     line = f"{ts} {msg}"
     print(line)
+    STATUS_LOG.parent.mkdir(parents=True, exist_ok=True)
     with open(STATUS_LOG, "a") as f:
         f.write(line + "\n")
 
@@ -72,14 +83,44 @@ def validate_output(path):
     return True, f"{lines} lines"
 
 
-async def run_track(track, prompt_path, output_path, timeout_min, repo_dir):
-    """Run a single review track with timeout."""
-    cmd = [
-        c.format(repo=str(repo_dir), output=str(output_path), prompt=str(prompt_path))
-        for c in CMD_TEMPLATE
+def get_track_layer(track):
+    """Find which layer a track belongs to."""
+    for layer, tracks in LAYERS.items():
+        if track in tracks:
+            return layer
+    return None
+
+
+def get_reasoning_level(track, override=None):
+    """Determine reasoning level for a track."""
+    if override:
+        return override
+    if track in TRACK_REASONING:
+        return TRACK_REASONING[track]
+    layer = get_track_layer(track)
+    if layer and layer in LAYER_REASONING:
+        return LAYER_REASONING[layer]
+    return "medium"
+
+
+def build_codex_cmd(repo_dir, output_path, reasoning_level):
+    """Build codex exec command with reasoning level."""
+    return [
+        "codex", "exec",
+        "-C", str(repo_dir),
+        "--skip-git-repo-check",
+        "--dangerously-bypass-approvals-and-sandbox",
+        "-c", f'model_reasoning_effort="{reasoning_level}"',
+        "-o", str(output_path),
     ]
 
-    log(f"LAUNCH {track}")
+
+async def run_track(track, prompt_path, output_path, timeout_min, repo_dir,
+                    reasoning_level):
+    """Run a single review track with timeout."""
+    cmd = build_codex_cmd(repo_dir, output_path, reasoning_level)
+
+    log(f"LAUNCH {track} (reasoning={reasoning_level})")
     start = time.time()
 
     try:
@@ -104,7 +145,6 @@ async def run_track(track, prompt_path, output_path, timeout_min, repo_dir):
 
         if proc.returncode != 0:
             log(f"ERROR {track}: exit code {proc.returncode} ({elapsed}s)")
-            # Save stderr for debugging
             err_path = output_path.with_suffix(".err")
             err_path.write_bytes(stderr or b"")
             return False
@@ -123,7 +163,7 @@ async def run_track(track, prompt_path, output_path, timeout_min, repo_dir):
 
 
 async def run_batch(tracks, prompts_dir, reviews_dir, parallel, timeout_min,
-                    repo_dir, force, inject_known):
+                    repo_dir, force, inject_known, reasoning_override):
     """Run tracks in batches of `parallel`."""
     reviews_dir.mkdir(parents=True, exist_ok=True)
 
@@ -147,9 +187,10 @@ async def run_batch(tracks, prompts_dir, reviews_dir, parallel, timeout_min,
             combined = reviews_dir / f".prompt_{track}.tmp"
             preamble = KNOWN_ISSUES_FILE.read_text() if KNOWN_ISSUES_FILE.exists() else ""
             combined.write_text(preamble + "\n---\n\n" + prompt.read_text())
-            queue.append((track, combined, output))
-        else:
-            queue.append((track, prompt, output))
+            prompt = combined
+
+        reasoning = get_reasoning_level(track, reasoning_override)
+        queue.append((track, prompt, output, reasoning))
 
     log(f"Queued {len(queue)} tracks (parallel={parallel}, timeout={timeout_min}m)")
 
@@ -157,16 +198,19 @@ async def run_batch(tracks, prompts_dir, reviews_dir, parallel, timeout_min,
     for i in range(0, len(queue), parallel):
         batch = queue[i:i + parallel]
         tasks = [
-            run_track(track, prompt, output, timeout_min, repo_dir)
-            for track, prompt, output in batch
+            run_track(track, prompt, output, timeout_min, repo_dir, reasoning)
+            for track, prompt, output, reasoning in batch
         ]
         results = await asyncio.gather(*tasks)
 
         # Retry failed tracks once
-        for j, (success, (track, prompt, output)) in enumerate(zip(results, batch)):
+        for j, (success, (track, prompt, output, reasoning)) in enumerate(
+            zip(results, batch)
+        ):
             if not success and not output.exists():
                 log(f"RETRY {track}")
-                await run_track(track, prompt, output, timeout_min, repo_dir)
+                await run_track(track, prompt, output, timeout_min, repo_dir,
+                                reasoning)
 
     # Cleanup temp files
     for f in reviews_dir.glob(".prompt_*.tmp"):
@@ -180,6 +224,9 @@ def main():
     parser.add_argument("--tracks", type=str, help="comma-separated track names")
     parser.add_argument("--layer", type=str, choices=list(LAYERS.keys()),
                         help="run all tracks in a layer")
+    parser.add_argument("--reasoning", type=str,
+                        choices=["minimal", "low", "medium", "high"],
+                        help="override reasoning level for all tracks")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--no-inject", action="store_true",
                         help="skip known-issues injection")
@@ -194,10 +241,13 @@ def main():
 
     log(f"=== Paper Review Launch ===")
     log(f"Tracks: {' '.join(tracks)}")
+    if args.reasoning:
+        log(f"Reasoning override: {args.reasoning}")
 
     asyncio.run(run_batch(
         tracks, PROMPTS_DIR, REVIEWS_DIR, args.parallel, args.timeout,
         REPO_DIR, args.force, inject_known=not args.no_inject,
+        reasoning_override=args.reasoning,
     ))
 
     # Summary

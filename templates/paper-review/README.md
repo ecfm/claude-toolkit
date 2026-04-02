@@ -51,10 +51,11 @@ python phase0/check_numbers.py        # do numbers match sources?
 
 ### 4. Run LLM reviews
 ```bash
-python launch.py --parallel 2 --layer exec
-python launch.py --parallel 2 --layer method
-python launch.py --parallel 2 --layer adversarial
-python launch.py --tracks naive_reader,citation_verify
+python launch.py --parallel 2 --layer exec              # low reasoning (mechanical)
+python launch.py --parallel 2 --layer method             # medium reasoning (careful comparison)
+python launch.py --parallel 2 --layer adversarial        # high reasoning (judgment)
+python launch.py --tracks naive_reader,citation_verify   # uses per-layer defaults
+python launch.py --reasoning low --layer exec --force    # override reasoning level
 ```
 
 ### 5. Consolidate findings
@@ -156,13 +157,21 @@ DECISIONS.md        # active constraints + open issues (living state)
 Each round YAML tracks: findings (with severity, status, resolution/pushback),
 Phase 0 results, review file list, and convergence metrics.
 
-## Model Selection
+## Model & Reasoning Selection
 
-| Track type | Recommended model | Why |
-|-----------|-------------------|-----|
-| Execute (E) | Codex/GPT-5.4 | Needs tool access for code execution |
-| Methodology (M) | Claude Opus | Deep multi-file reasoning |
-| Adversarial (A) | Claude Opus | Creative argument construction |
-| Naive reader | Any fresh model | Must not have seen the paper before |
-| Citation verify | Sonnet + web search | Needs to look up papers |
-| Re-review round | Different model family | Cross-model convergence |
+Default backend: Codex CLI with GPT-5.4. Reasoning level controls depth vs speed.
+
+| Track type | Reasoning level | Time estimate | Why |
+|-----------|----------------|---------------|-----|
+| Execute (E) | `low` | ~30s | Mechanical: run script, compare output |
+| Consistency (CC) | `low` | ~30s | Mechanical: grep + compare numbers |
+| Methodology (M) | `medium` | ~90s | Careful comparison, multi-file |
+| Data integrity (D) | `medium` | ~90s | Trace data flow, check alignment |
+| Adversarial (A) | `high` | ~3min | Judgment: construct counterexamples |
+| SI review | `high` | ~3min | Judgment: content correctness |
+| Naive reader | `medium` | ~90s | Fresh read, report confusion |
+| Citation verify | `medium` | ~90s | Look up papers, compare claims |
+| Re-review round | Different model family | varies | Cross-model convergence |
+
+Set defaults in `LAYER_REASONING` dict in `launch.py`, or override per-track in
+`TRACK_REASONING`, or globally via `--reasoning` CLI flag.
