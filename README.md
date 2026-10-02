@@ -31,15 +31,19 @@ and loaded into Claude Code sessions automatically.
 ## What Gets Synced
 
 ```
+AGENTS.md                  → ~/.codex/AGENTS.md           # Global instructions, all agents
+writing.md                 (read on demand)               # Writing guide, all agents
 claude/
-├── CLAUDE.md              → ~/.claude/CLAUDE.md          # Global instructions
-├── settings.json          → ~/.claude/settings.json      # Hooks, theme, status line
-├── commands/*.md          → ~/.claude/commands/           # Slash commands
-└── rules/                 → ~/.claude/rules/             # Auto-loaded rules
-    ├── coding-style.md    #   uv, fail-fast, logging, evidence preservation
-    ├── experiment-runs.md #   smoke test, complete-each-run, post-run checks
-    └── decisions.md       #   when to ask vs decide
+├── CLAUDE.md              → ~/.claude/CLAUDE.md          # Imports AGENTS.md + Claude-only notes
+├── settings.json          (copied, not linked)           # Hooks, theme, status line
+├── commands/*.md          → ~/.claude/commands/          # Slash commands
+├── agents/*.md            → ~/.claude/agents/            # Subagents
+└── skills/*/              → ~/.claude/skills/            # Skills
 ```
+
+Guides read on demand (see the table in `AGENTS.md`): `writing.md`,
+`experiment-practices.md`, `pipeline-architecture.md`, `research-methodology.md`,
+`report-writing.md`, `agent-design.md`.
 
 ## Setup
 
@@ -48,27 +52,14 @@ git clone git@github.com:ecfm/claude-toolkit.git ~/Mao/claude-toolkit
 bash ~/Mao/claude-toolkit/install.sh
 ```
 
-This symlinks all Claude Code config files so every session inherits shared rules,
-commands, hooks, and settings.
-
-### Notifications (optional)
-
-Hooks send push notifications via [ntfy.sh](https://ntfy.sh) when Claude Code
-completes a task. This works over tmux/mosh/SSH where desktop notifications don't.
-
-```bash
-# Add to your shell profile (~/.bashrc or ~/.zshrc):
-export NTFY_TOPIC="your-unique-topic"
-```
-
-Then subscribe to `ntfy.sh/your-unique-topic` on your phone or browser.
-If `NTFY_TOPIC` is unset, the notification hook is a no-op.
+This symlinks the instruction files, commands, agents, and skills so every Claude
+Code and Codex session inherits them. `settings.json` is copied only if none exists,
+because each machine keeps its own local settings.
 
 ## Usage
 
-- Best practices are loaded into Claude Code sessions via the routing table in
-  `claude/CLAUDE.md`
-- Rules in `claude/rules/` are auto-loaded by Claude Code from `~/.claude/rules/`
+- `AGENTS.md` is the one global instruction file. Claude Code loads it through
+  the import in `claude/CLAUDE.md`; Codex loads it through `~/.codex/AGENTS.md`.
 - Use `/sync-learnings` at end of session to commit and push new learnings
 - `runs.yaml` in each project repo tracks run stability (see experiment-practices.md
   section 11)

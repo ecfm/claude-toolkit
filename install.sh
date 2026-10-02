@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install Claude Code config files by symlinking from this repo.
+# Install Claude Code and Codex config files by symlinking from this repo.
 # Run once per server after cloning:
 #   git clone git@github.com:ecfm/claude-toolkit.git ~/Mao/claude-toolkit
 #   bash ~/Mao/claude-toolkit/install.sh
@@ -12,7 +12,6 @@ echo "Installing from: ${REPO_DIR}"
 
 # Create ~/.claude directories
 mkdir -p ~/.claude/commands
-mkdir -p ~/.claude/rules
 mkdir -p ~/.claude/agents
 
 # Symlink CLAUDE.md (global instructions)
@@ -28,17 +27,25 @@ else
     echo "Symlinked ~/.claude/CLAUDE.md"
 fi
 
-# Symlink settings.json (hooks, theme, statusLine)
-if [ -L ~/.claude/settings.json ]; then
-    echo "~/.claude/settings.json already symlinked"
-elif [ -f ~/.claude/settings.json ]; then
-    echo "~/.claude/settings.json exists (not a symlink). Backing up to ~/.claude/settings.json.bak"
-    mv ~/.claude/settings.json ~/.claude/settings.json.bak
-    ln -sf "${REPO_DIR}/claude/settings.json" ~/.claude/settings.json
-    echo "Symlinked ~/.claude/settings.json"
+# settings.json: each machine keeps its own copy. Copy the shared one only if none exists.
+if [ -e ~/.claude/settings.json ]; then
+    echo "~/.claude/settings.json exists; left unchanged (compare with ${REPO_DIR}/claude/settings.json)"
 else
-    ln -sf "${REPO_DIR}/claude/settings.json" ~/.claude/settings.json
-    echo "Symlinked ~/.claude/settings.json"
+    cp "${REPO_DIR}/claude/settings.json" ~/.claude/settings.json
+    echo "Copied ~/.claude/settings.json"
+fi
+
+# Codex reads the same global AGENTS.md
+mkdir -p ~/.codex
+if [ -L ~/.codex/AGENTS.md ]; then
+    echo "~/.codex/AGENTS.md already symlinked"
+else
+    if [ -f ~/.codex/AGENTS.md ]; then
+        mv ~/.codex/AGENTS.md ~/.codex/AGENTS.md.bak
+        echo "Backed up ~/.codex/AGENTS.md to ~/.codex/AGENTS.md.bak"
+    fi
+    ln -s "${REPO_DIR}/AGENTS.md" ~/.codex/AGENTS.md
+    echo "Symlinked ~/.codex/AGENTS.md"
 fi
 
 # Symlink all commands
@@ -49,12 +56,12 @@ for cmd in "${REPO_DIR}"/claude/commands/*.md; do
     echo "Symlinked ~/.claude/commands/${name}"
 done
 
-# Symlink all rules
-for rule in "${REPO_DIR}"/claude/rules/*.md; do
-    [ -f "$rule" ] || continue
-    name=$(basename "$rule")
-    ln -sf "$rule" ~/.claude/rules/"$name"
-    echo "Symlinked ~/.claude/rules/${name}"
+# Rules were folded into AGENTS.md; remove old links that pointed into this repo
+for link in ~/.claude/rules/*.md; do
+    [ -L "$link" ] || continue
+    case "$(readlink "$link")" in
+        "${REPO_DIR}"/*|"$(cd "${REPO_DIR}" && pwd -P)"/*) rm "$link"; echo "Removed old rule link ${link}" ;;
+    esac
 done
 
 # Symlink all agents
@@ -88,6 +95,6 @@ echo "Done. Verify with:"
 echo "  ls -la ~/.claude/CLAUDE.md"
 echo "  ls -la ~/.claude/settings.json"
 echo "  ls -la ~/.claude/commands/"
-echo "  ls -la ~/.claude/rules/"
+echo "  ls -la ~/.codex/AGENTS.md"
 echo "  ls -la ~/.claude/agents/"
 echo "  ls -la ~/.claude/skills/"

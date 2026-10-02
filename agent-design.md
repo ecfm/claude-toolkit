@@ -15,7 +15,7 @@
 ## Agent Design Patterns
 
 - Fill templates via Bash/Python — parent reads template file, fills placeholders with code, passes result as sub-agent prompt. Template text never enters parent's conversation context.
-- Custom agent types (in `.claude/agents/`) can't be invoked via `subagent_type` parameter — only built-in types (`general-purpose`, `Explore`, `Plan`, `claude-code-guide`) work.
+- Custom agent types (in `~/.claude/agents/` or `.claude/agents/`) can be invoked by name via the `subagent_type` parameter once they are loaded.
 - Agent definitions in `.claude/agents/` load at session start. Use `/agents` to hot-reload mid-session.
 - Sub-agents CAN launch other sub-agents in practice (despite docs suggesting otherwise).
 - Compact reports: sub-agents should return only flagged/actionable items + counts, not full tables of verified items. This saves main session context.

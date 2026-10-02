@@ -5,7 +5,7 @@ These apply broadly to any ML project that involves model inference, evaluation,
 and manual validation of results.
 
 General coding rules (fail-fast, logging, monitoring) are in
-[claude/CLAUDE.md](claude/CLAUDE.md). Pipeline architecture patterns are in
+[AGENTS.md](AGENTS.md). Pipeline architecture patterns are in
 [pipeline-architecture.md](pipeline-architecture.md).
 
 ---
