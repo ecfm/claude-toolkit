@@ -32,6 +32,3 @@
 - For fact-checking: Reader agent fetches source without seeing the claim, Checker agent compares blind summary against claim without seeing the source.
 - Prevents confirmation bias. Doubles agent count but worth it for accuracy.
 - Reader: `WebFetch` only. Checker: no tools (pure text comparison).
-- A blindness rule ("the writer must not have seen X") limits only the steps that write new content. Copying, hashing, freezing, uploading and running a model on fixed inputs leak nothing; any agent can do them, including one that has seen X.
-- When new content is needed, the agent that has seen X starts a fresh subagent without access to X, plus a second fresh one to check the result for leaks. Do not hand the work to another session, least of all one that acts only when the user is present.
-- Before handing work off, check whether the requested thing already exists where the requester is.
