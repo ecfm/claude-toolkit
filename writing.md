@@ -37,6 +37,9 @@ coin a name for something the text uses only once. Introduce the concrete
 concept before its technical label. Use an example when an essential term stays
 abstract; do not add a second example unless the mechanism changes.
 
+Define for the target reader. Do not define terms that reader already knows
+(for an ML reader: LoRA, GRPO, RL). Define the document's own terms.
+
 ### Plain wording
 
 Plain, complete wording. Split sentences that stack several clauses into
@@ -44,11 +47,36 @@ separate sentences or a short enumerated list ((i), (ii), (iii)). Use simple
 connected sentences, not nested clauses or fragments that make readers rebuild
 the relationships.
 
+- Keep subject, verb, object in that order. Do not front an object or a clause
+  ("which behaviors training would spread" becomes "whether training would make
+  each behavior more common"). Do not move the object after a long qualifier
+  ("we count as hacks the answers that..." becomes "we count an answer as a hack
+  if it...").
+- Do not put an aside between commas, the same as an em-dash aside (", with the
+  same alarm rule,"; "A second grader, the gold grader, ..."). Make it a
+  separate sentence.
+- Do not pack two events into one clause ("Can a signal warn before RL makes
+  hacking common?"). Say each event in its own clause or sentence.
+- Do not let a noun sequence read as a compound when one word is a verb
+  ("signals that need no gold grader alarm").
+- Say what the relation is. "Tests that follow from the task" becomes "tests
+  whose expected outputs the task text fixes".
+- Use words in their literal sense. A loophole does not spread; the use of it
+  does.
+
 ### Stable names
 
 Use one name for one thing. If two expressions mean different things, make the
 difference visible. Do not vary wording just to avoid repetition. Use parallel
 wording for comparable conditions.
+
+Choose names that explain themselves and do not collide with other terms in the
+document. Prefer a pair whose contrast carries the meaning (proxy grader, gold
+grader). Avoid a word already used for something else (a "reference check" next
+to a "reference solution"), a word that implies a claim the text disputes
+("trusted grader" when the point is that it errs), and a coined label where an
+existing term or the plain name works ("reward check" for a grader). After
+renaming, search the whole text for the old term.
 
 ### Actor and action
 
@@ -62,7 +90,10 @@ do a different step.
 Resolve pronouns and abstract phrases without filling gaps by inference. Recheck
 edited sentences against the described operation, including captions and figure
 labels. Watch phrases such as "the procedure", "the argument", or "the model
-selects".
+selects". Check each "it", "them", "they", "this", "such", "there", and "that case", and each
+comparison verb such as "match" or "do as well". Name the noun, and name the
+measure of each comparison. For example, "the baseline does not match it" becomes
+"the surrogate does better than the baseline by the same measure".
 
 ### Procedures as steps
 
