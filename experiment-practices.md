@@ -202,6 +202,28 @@ ambiguous.**
 - The best practice in this document conflicts with what the study requires
 - Multiple reasonable approaches exist and the choice materially affects results
 
+### When a validity rule blocks every workable option
+
+Do not choose between "break the rule" and "drop the arm". Resolve it this way
+(user-approved pattern, 2026-11-06):
+
+1. Ask what the rule protects. Example: "no model larger than the policy
+   writes the reward checks" protects the claim that the method works where no
+   stronger model exists.
+2. Apply the rule strictly to the part of the design that carries that risk
+   (what differs between arms or variants, the treatment). Relax it for shared,
+   fixed infrastructure, with written conditions: generic content only, frozen
+   before any run, unchanged during training.
+3. Name the confound the relaxation leaves. Measure it with the cheapest test
+   first, for example an offline comparison of the same infrastructure written
+   by a weaker and a stronger model. Defer the expensive control arm until the
+   main result makes it matter.
+4. State the limitation in every result's label.
+5. Check how prior work handled the same choice (`research-methodology.md`
+   section 10), so readers know how the rule compares with common practice.
+
+This is still a study choice: bring it to the user as a recommendation.
+
 ## 9. Smoke Test Before Full Run
 
 Before launching a multi-hour training or a large-scale inference run, smoke test
