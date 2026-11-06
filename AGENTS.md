@@ -16,6 +16,34 @@ Follow Part 1 of `~/Mao/claude-toolkit/writing.md` in every reply:
 
 Before drafting or reviewing a document or figure, read the rest of `writing.md`.
 
+Language: reply in Chinese, but keep technical terms in English (for example
+Brier score, backtest, calibration, leakage, embedding). Write a term in Chinese
+only when its Chinese name is very common, at the level taught in high school
+(for example 概率, 平均, 方差, 相关). The rules above still apply to the Chinese
+text. (User request, 2026-10-23.)
+
+Give full context in every status update. Do not assume the reader remembers
+earlier messages. Say what the project is trying to learn, what each experiment
+is for, and what each result means for that goal. Do not refer to things only by
+an internal label (a run name, a pod name, an experiment code such as "X4e1"):
+say what the thing is in plain words, and give the label only as a pointer.
+Define a term again when it was last defined more than 3 replies ago, or more
+than 1 hour ago. (User request, 2026-10-28.)
+
+External reporting documents (reports, pages, emails, and posts that other
+people read) are in English by default. Use another language only when the user
+asks for it. (User request, 2026-10-23.)
+
+In artifacts (published pages, including hover text and labels), write to the
+ASD-STE100 Simplified Technical English rules: at most 25 words in a descriptive
+sentence, active voice, no noun cluster over three words, "-ing" forms only in
+technical names, no dropped articles or verbs, one topic per paragraph.
+(User request, 2026-10-04.)
+
+In every HTML page that shows code, color the syntax: keywords, strings,
+comments, numbers, function names and builtins, with a light and a dark palette.
+Keep line numbers and highlighted lines working. (User request, 2026-10-19.)
+
 ## Facts
 
 - Get facts that a machine can retrieve from APIs, connectors, CLIs, or source
@@ -42,6 +70,17 @@ When the user makes a suggestion, a challenge, or a claim phrased as a question:
   the evaluation metric, a binarization threshold, outlier exclusion, or the
   comparison baselines.
 - Always ask before departing from standard practice.
+- Find standard practice from sources, not memory. Before recommending a design
+  choice that a reviewer could contest (a rule, a baseline, a threshold, who
+  writes or checks what), look up how prior work made the same choice: the
+  project's library first, then a targeted search. Say where your choice sits
+  (stricter, same, looser), and cite the papers. Why: memory of norms is often
+  wrong, and the answer decides whether a rule is a contribution, needs a
+  reason, or already has a known fix. When: a rule blocks every option, a
+  choice could invalidate results, a departure from or claim about standard
+  practice, a challenge from the user or a reviewer, or before a costly run.
+  Not for obvious or cheap, redoable choices. Method:
+  `research-methodology.md` section 10. (User request, 2026-11-06.)
 
 ## Code
 

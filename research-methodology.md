@@ -385,3 +385,67 @@ hunk), upstream chain propagation.
   truth, test the agent prompt against it, fix systematic errors, then batch.
   Common agent errors: en-dash vs hyphen in provenance_claim substrings, case
   sensitivity in quotes, confusing method descriptions for claims.
+
+## 10. Check Established Practice Before a Design Decision
+
+User request, 2026-11-06. A design choice that a reviewer could contest needs
+evidence of how prior work made the same choice. Examples: a validity rule, a
+baseline, a threshold, who writes the grader or the monitor, how large a model
+may be in a given role. Memory of "what people usually do" is not evidence.
+
+**Why.**
+- Memory of a field's norms is often wrong or out of date. A wrong belief
+  about the norm leads to a rule that is either too strict (it stalls the
+  work) or too loose (it invalidates the result).
+- The answer changes the decision. Stricter than the norm: the rule is part
+  of the contribution and must be stated. Looser: it needs a reason and a check.
+- Prior work often already shows how to handle the limitation (for example:
+  simulate it, measure it, or report it as a reference). That saves a design
+  round.
+- Readers and reviewers ask "is this standard?" The answer needs citations.
+
+**When to search.**
+- A rule seems to block every workable option.
+- A choice could invalidate results: the metric, the baseline, a threshold,
+  who writes the grader or the monitor, model size in a role.
+- You are about to depart from standard practice, or to call something
+  standard, new, or stricter than usual.
+- The user or a reviewer challenges a design choice.
+- Before a costly run that rests on the choice.
+- The research question changes (redo the related-work check for the new question).
+
+**When not to.** The choice is obvious from context (a grouped split, standard
+normalization), or it is cheap engineering that can be redone. Decide those
+and state the choice.
+
+1. **Name the choice as a question prior work could answer.** For example:
+   "In RL papers, which model writes the tests used as reward, relative to the
+   policy's size?"
+2. **Search the project's own library and discovery notes first.** Use the
+   project's search tools (for example `find_related_work.py`). Earlier reviews
+   often hold the answer in their tables already. Delegate the sweep to a cheap
+   read-only agent; ask it for a table with paper, setting, category, and file
+   path plus line.
+3. **Then a targeted external search**, only for the gap. Follow the project's
+   retrieval and provenance rules.
+4. **Classify each paper against your choice:** stricter, same, looser, or
+   not addressed. Note how each paper handled the limitation, if it did (for
+   example: ignored it, simulated a weaker version by adding label noise,
+   reported a reference point, measured it directly).
+5. **Report the norm with counts and coverage.** Say how many papers fall in
+   each class, which rows rest on abstracts or one-line summaries, and what the
+   search did not cover. Mark the conclusion provisional when coverage is thin.
+6. **Use the result in the decision.** If your choice is stricter than the
+   norm, say so and say what it buys. If it is looser, it needs a reason and
+   usually a measured check. If no prior work addresses it, that is either a
+   gap worth stating or a sign the question is framed wrong.
+
+Worked case (SPAR dir3, 2026-11-06): the question "may a model larger than the
+policy write the reward checks?" came up. The project's reviews showed that
+stronger writers are the norm in RL test generation (AceCoder, KodCode,
+CodeContests-O), that one paper simulates weak supervision by flipping labels
+(Wong, Engels, Nanda), and that none has the policy write its own reward
+checks. So the project's same-size rule is stricter than the norm, and that is
+part of its contribution. The decision then split the rule: strict for what
+differs between variants, lenient for shared fixed infrastructure, with the
+leftover confound measured offline and stated in every result label.
